@@ -1,6 +1,6 @@
 {
   "name": "zen-editor",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,7 @@
   },
   "pi": {
     "extensions": [
-      "./src/index.ts"
+      "./extensions/index.ts"
     ]
   },
   "allowScripts": {
@@ -25,5 +25,8 @@
   },
   "dependencies": {
     "@types/node": "^26.1.2"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
   }
 }
