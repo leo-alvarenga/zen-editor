@@ -23,10 +23,8 @@
     "@google/genai@1.52.0": true,
     "protobufjs@7.6.5": true
   },
-  "dependencies": {
-    "@types/node": "^26.1.2"
-  },
   "devDependencies": {
+    "@types/node": "^26.1.2",
     "typescript": "^7.0.2"
   }
 }
