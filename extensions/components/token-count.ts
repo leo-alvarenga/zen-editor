@@ -29,14 +29,17 @@ export const tokenCountSegment: SegmentDef = {
     if (!c) return "";
 
     const pct = c.percent === null ? "?" : `${Math.round(c.percent)}%`;
-    const color: ThemeColor =
-      c.percent === null
-        ? "muted"
-        : c.percent >= 80
-          ? "error"
-          : c.percent >= 50
-            ? "warning"
-            : "success";
+    let color: ThemeColor = "muted";
+
+    if (c.percent !== null) {
+      if (c.percent >= 80) {
+        color = "error";
+      } else if (c.percent >= 50) {
+        color = "warning";
+      } else {
+        color = "success";
+      }
+    }
 
     const used = c.tokens === null ? "?" : formatTokens(c.tokens);
 

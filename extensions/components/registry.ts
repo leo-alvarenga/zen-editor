@@ -33,7 +33,7 @@ export function segmentsFor(
   const defs = segments.filter(
     (s) => s.slot === slot && (!s.enabled || s.enabled(d, ctx.cfg)),
   );
-  const replacer = defs.find((s) => s.replaces);
+  const replacer = defs.find((s) => s.replaces?.(d, ctx.cfg));
   const active = replacer ? [replacer] : defs;
 
   return active

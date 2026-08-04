@@ -10,30 +10,34 @@
  */
 import { execFileSync } from "node:child_process";
 
-import type { ExtensionAPI, ExtensionContext, ThemeColor } from "@earendil-works/pi-coding-agent";
+import type {
+  ExtensionAPI,
+  ExtensionContext,
+  ThemeColor,
+} from "@earendil-works/pi-coding-agent";
 
 import {
   DEFAULT_SETTINGS,
-  DEFAULT_WIDGET_KEY,
-  MODE_CHANGE_EVENT_KEY,
   PI_MODE_MANAGER_MODE_DATA_KEY,
   PI_MODE_MANAGER_MODE_EVENT,
 } from "./config/constants";
 import { loadSettings } from "./config/settings";
-import type { Mode, Settings, SpinnerPhase } from "./config/types";
-import { getModeWidget } from "./components/widget";
+import type { Settings, SpinnerPhase } from "./config/types";
 import type { ExternalData } from "./components/types";
 import { VimEditor } from "./vim/vim-editor";
+import { capitalize } from "./utils";
 
 type AgentModeState = ExternalData["agentMode"];
 
 let editor: VimEditor | null = null;
 let currentCtx: ExtensionContext | null = null;
 let settings: Settings = DEFAULT_SETTINGS;
-let mode: Mode = "insert";
 let spinnerPhase: SpinnerPhase | null = null;
 let agentMode: AgentModeState = null;
-let git: { branch: string | undefined; dirty: number } = { branch: undefined, dirty: 0 };
+let git: { branch: string | undefined; dirty: number } = {
+  branch: undefined,
+  dirty: 0,
+};
 
 // ── data sources ─────────────────────────────────────────────────────────
 
@@ -42,9 +46,16 @@ function readAgentModeFromSession(ctx: ExtensionContext): void {
     const entries = [...ctx.sessionManager.getBranch()].reverse();
     for (const entry of entries) {
       const e = entry as { type?: string; customType?: string; data?: unknown };
-      if (e.type !== "custom" || e.customType !== PI_MODE_MANAGER_MODE_DATA_KEY) continue;
+      if (e.type !== "custom" || e.customType !== PI_MODE_MANAGER_MODE_DATA_KEY)
+        continue;
       const state = e.data as
-        | { currentModeConfig?: { name?: string; icon?: string; color?: ThemeColor } }
+        | {
+            currentModeConfig?: {
+              name?: string;
+              icon?: string;
+              color?: ThemeColor;
+            };
+          }
         | undefined;
       if (state?.currentModeConfig?.name) {
         agentMode = {
@@ -84,13 +95,18 @@ function readGit(cwd: string): { branch: string | undefined; dirty: number } {
 function provideExternal(): ExternalData {
   const ctx = currentCtx;
   const usage = ctx?.getContextUsage?.();
-  const model = ctx?.model as { name?: string; id?: string } | undefined;
+  const model = ctx?.model;
+
   return {
-    modelName: model?.name ?? model?.id,
+    modelName: `${model?.name ?? model?.id ?? "Unknown"} (${capitalize(model?.provider ?? "unknown")})`,
     thinkingLevel: ctx?.thinkingLevel as string | undefined,
     spinnerPhase,
     context: usage
-      ? { tokens: usage.tokens, window: usage.contextWindow, percent: usage.percent }
+      ? {
+          tokens: usage.tokens,
+          window: usage.contextWindow,
+          percent: usage.percent,
+        }
       : null,
     cwd: ctx?.cwd ?? "",
     gitBranch: git.branch,
@@ -102,6 +118,7 @@ function provideExternal(): ExternalData {
 
 function setSpinner(phase: SpinnerPhase | null): void {
   if (spinnerPhase === phase) return;
+
   spinnerPhase = phase;
   editor?.setSpinner(phase);
 }
@@ -111,17 +128,17 @@ function setSpinner(phase: SpinnerPhase | null): void {
 export default async function (pi: ExtensionAPI) {
   settings = await loadSettings();
 
-  pi.events.on(MODE_CHANGE_EVENT_KEY, (event) => {
-    if (event && typeof event === "object" && "mode" in event) {
-      mode = (event as { mode: Mode }).mode;
-      drawWidget();
-    }
-  });
-
   // Optional pi-mode-manager integration (no hard dependency).
   pi.events.on(PI_MODE_MANAGER_MODE_EVENT, (event) => {
     const state = event as
-      | { currentMode?: string; currentModeConfig?: { name?: string; icon?: string; color?: ThemeColor } }
+      | {
+          currentMode?: string;
+          currentModeConfig?: {
+            name?: string;
+            icon?: string;
+            color?: ThemeColor;
+          };
+        }
       | undefined;
     if (state?.currentModeConfig?.name) {
       agentMode = {
@@ -140,6 +157,8 @@ export default async function (pi: ExtensionAPI) {
     readAgentModeFromSession(ctx);
     git = readGit(ctx.cwd);
 
+    setTimeout(() => setSpinner("idle"), 1000);
+
     ctx.ui.setEditorComponent((...args) => {
       editor?.stopSpinner();
       editor = new VimEditor(
@@ -153,8 +172,6 @@ export default async function (pi: ExtensionAPI) {
       );
       return editor;
     });
-
-    drawWidget();
   });
 
   pi.on("session_shutdown", () => {
@@ -166,24 +183,19 @@ export default async function (pi: ExtensionAPI) {
 
   // Spinner phase mapping.
   pi.on("turn_start", () => setSpinner("thinking"));
-  pi.on("message_update", (event) => {
-    const type = (event as { assistantMessageEvent?: { type?: string } })
-      .assistantMessageEvent?.type;
-    if (typeof type === "string") {
-      if (type.startsWith("text_")) setSpinner("outputting");
-      else if (type.startsWith("thinking_")) setSpinner("thinking");
-      else if (type.startsWith("toolcall_")) setSpinner("toolcall");
-    }
-  });
-  pi.on("tool_execution_start", () => setSpinner("exec"));
-  pi.on("agent_end", () => setSpinner(null));
 
-  function drawWidget(): void {
-    if (!currentCtx || !settings.widget?.enable) return;
-    currentCtx.ui.setWidget(
-      DEFAULT_WIDGET_KEY,
-      getModeWidget(mode, currentCtx.ui.theme, settings.widget),
-      { placement: settings.widget.placement },
-    );
-  }
+  pi.on("message_update", (event) => {
+    const type = event?.assistantMessageEvent?.type;
+
+    if (typeof type !== "string") return;
+
+    if (type.startsWith("text_")) setSpinner("outputting");
+    else if (type.startsWith("thinking_")) setSpinner("thinking");
+    else if (type.startsWith("toolcall_")) setSpinner("toolcall");
+    else setSpinner("idle");
+  });
+
+  pi.on("tool_execution_start", () => setSpinner("exec"));
+
+  pi.on("agent_end", () => setSpinner(null));
 }

@@ -1,8 +1,5 @@
+import { capitalize } from "../utils";
 import type { SegmentDef } from "./types";
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 /** Top-right: the current Agent Mode from pi-mode-manager (when installed).
  *  Rendered as a pill using the mode's own color/icon. */

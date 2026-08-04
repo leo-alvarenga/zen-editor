@@ -1,20 +1,31 @@
-import type {
-  ThemeColor,
-  WidgetPlacement,
-} from "@earendil-works/pi-coding-agent";
+import type { ThemeColor } from "@earendil-works/pi-coding-agent";
 
 /** Vim editing mode. */
 export type Mode = "normal" | "insert" | "visual";
 
 /** Streaming phase used to drive the status-animation spinner. */
-export type SpinnerPhase = "thinking" | "outputting" | "toolcall" | "exec";
+export type SpinnerPhase =
+  "thinking" | "outputting" | "toolcall" | "exec" | "idle";
+
+export interface FrameColors {
+  border: ThemeColor;
+  background: ThemeColor;
+  cwd: ThemeColor;
+  model: ThemeColor;
+  context: ThemeColor;
+  thinking: ThemeColor;
+  vimMode: ThemeColor;
+  agentMode: ThemeColor;
+}
 
 /** Nerd-font / glyph icons shown in the frame border. Each is overridable. */
 export interface FrameIcons {
-  model: string;
-  thinking: string;
-  context: string;
   folder: string;
+  model: string;
+  context: string;
+  thinking: string;
+  gitDirty: string;
+  gitBranch: string;
 }
 
 /**
@@ -49,7 +60,9 @@ export interface FrameSettings {
   showVimMode?: boolean;
   showThinking?: boolean;
   showAgentMode?: boolean;
+
   icons?: Partial<FrameIcons>;
+  colors?: Partial<FrameColors>;
 }
 
 export interface VimSettings {
@@ -57,20 +70,7 @@ export interface VimSettings {
   visualMode?: boolean;
 }
 
-export interface WidgetModeSettings {
-  label?: string;
-  icon?: string;
-  color?: ThemeColor;
-}
-
-export interface WidgetSettings {
-  enable?: boolean;
-  placement?: WidgetPlacement;
-  modes?: Partial<Record<Mode, WidgetModeSettings>>;
-}
-
 export interface Settings {
   vim?: VimSettings;
-  widget?: WidgetSettings;
   frame?: FrameSettings;
 }

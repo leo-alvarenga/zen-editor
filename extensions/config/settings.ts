@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 
 import { CONFIG_FILE_NAME, DEFAULT_SETTINGS } from "./constants";
-import { Settings, WidgetSettings } from "./types";
+import { Settings } from "./types";
 
 function getResolvedSettingsFilePath(): string {
   return join(getAgentDir(), CONFIG_FILE_NAME);
@@ -25,25 +25,11 @@ function normalize(raw: unknown): Settings {
     frame: { ...DEFAULT_SETTINGS.frame },
   };
 
-  if (typeof r.widget === "object" && r.widget) {
-    const w = r.widget as Record<string, unknown>;
-    out.widget = {
-      enable: typeof w.enable === "boolean" ? w.enable : d.widget?.enable,
-      placement:
-        typeof w.placement === "string"
-          ? (w.placement as WidgetSettings["placement"])
-          : d.widget?.placement,
-      modes:
-        typeof w.modes === "object" && w.modes
-          ? (w.modes as Record<string, unknown>)
-          : d.widget?.modes,
-    };
-  }
-
   const vimSrc =
     typeof r.vim === "object" && r.vim
       ? (r.vim as Record<string, unknown>)
       : {};
+
   out.vim = {
     visualMode:
       typeof vimSrc.visualMode === "boolean"
@@ -53,12 +39,15 @@ function normalize(raw: unknown): Settings {
 
   if (typeof r.frame === "object" && r.frame) {
     const f = r.frame as Record<string, unknown>;
+
     const num = (v: unknown, fallback: number): number =>
       typeof v === "number" && Number.isFinite(v) && v >= 0
         ? Math.floor(v)
         : fallback;
+
     const bool = (v: unknown, fallback: boolean | undefined): boolean =>
       typeof v === "boolean" ? v : (fallback ?? true);
+
     out.frame = {
       enable: bool(f.enable, d.frame?.enable),
       minWidth: num(f.minWidth, d.frame?.minWidth ?? 20),

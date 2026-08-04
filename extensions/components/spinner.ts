@@ -5,13 +5,14 @@ import type { SegmentDef } from "./types";
 export const spinnerSegment: SegmentDef = {
   id: "spinner",
   slot: "topLeft",
-  replaces: true,
-  enabled: (d) => d.spinnerPhase !== null,
+  enabled: (d) => d.spinnerPhase !== null && d.spinnerPhase !== "idle",
+  replaces: (d) => d.spinnerPhase !== null && d.spinnerPhase !== "idle",
   render: (d, { theme }) => {
-    const phase = d.spinnerPhase ?? "thinking";
+    let phase = d.spinnerPhase ?? "thinking";
 
-    return (
-      theme.fg("accent", ` ${d.spinnerFrame} `) + theme.fg("muted", `${phase} `)
-    );
+    const spinner = theme.fg("accent", ` ${d.spinnerFrame} `);
+    if (phase === "idle") return spinner;
+
+    return spinner + theme.fg("muted", `${phase} `);
   },
 };

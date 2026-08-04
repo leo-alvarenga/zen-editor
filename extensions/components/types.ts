@@ -10,7 +10,12 @@
  */
 import type { Theme, ThemeColor } from "@earendil-works/pi-coding-agent";
 
-import type { FrameSettings, Mode, SpinnerPhase } from "../config/types";
+import type {
+  FrameIcons,
+  FrameSettings,
+  Mode,
+  SpinnerPhase,
+} from "../config/types";
 
 /** Where in the frame border a segment renders. */
 export type Slot = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
@@ -40,9 +45,9 @@ export interface FrameData {
 /** Data + rendering helpers handed to every segment. */
 export interface SegmentContext {
   theme: Theme;
+  icons: FrameIcons;
   cfg: FrameSettings;
   border: (str: string) => string;
-  icons: Record<"model" | "thinking" | "context" | "folder", string>;
 }
 
 /** A segment renders an already-ANSI-styled string, or "" to render nothing. */
@@ -55,7 +60,7 @@ export interface SegmentDef {
   enabled?: (d: FrameData, cfg: FrameSettings) => boolean;
 
   /** When enabled, this segment replaces everything else in the slot. */
-  replaces?: boolean;
+  replaces?: (d: FrameData, cfg: FrameSettings) => boolean;
 }
 
 /**

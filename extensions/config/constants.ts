@@ -1,7 +1,6 @@
 import type { FrameIcons, Settings, SpinnerPhase } from "./types";
 
 export const CONFIG_FILE_NAME = "zen-editor.json";
-export const DEFAULT_WIDGET_KEY = "zen-editor-widget";
 export const MODE_CHANGE_EVENT_KEY = "zen_editor_mode_change";
 
 /** pi-mode-manager integration (optional — no hard dependency). */
@@ -21,18 +20,23 @@ export const DELETE_FORWARD_KEY = "\x1b[3~";
 
 /** Spinner animation frames per phase (pi-editor-shell style). */
 export const SPINNER_FRAMES: Record<SpinnerPhase, string[]> = {
-  thinking: ["●", "●", "○", "○"],
+  idle: ["⠃", "⠞", "⡵", "⠿", "⢹", "⠄"],
   outputting: ["⡀", "⣀", "⣄", "⣤", "⣦", "⣶", "⣷", "⣿"],
-  toolcall: ["░", "▒", "▓", "█", "▓", "▒"],
+  thinking: ["󰌶", "󰌶", "󰌶", "󰌶", "󰌵", "󰌵", "󰌵", "󰌵"],
+  toolcall: ["●", "●", "●", "●", "○", "○", "○", "○"],
   exec: ["◜", "◝", "◞", "◟"],
+
+  // Sample ["░", "▒", "▓", "█", "▓", "▒"],
 };
 
 /** Nerd Font defaults (override any subset via `frame.icons`). */
 export const DEFAULT_ICONS: FrameIcons = {
-  model: "\uf4bc", //   oct-cpu
-  thinking: "\uf400", // oct-light_bulb
-  context: "\uf49b", //  oct-cache
+  model: "\uee9c", // fa-brain
   folder: "\uf07c", //  fa-folder_open
+  context: "\uf49b", //  oct-cache
+  gitDirty: "\uec0c", //  cod-git_pull_request_new_changes
+  thinking: "\uf400", // oct-light_bulb
+  gitBranch: "\uf126", //  fa-code-branch
 };
 
 /** Thinking level → theme token, mirroring pi's own border-color mapping. */
@@ -47,12 +51,10 @@ export const THINKING_TOKEN: Record<string, string> = {
 };
 
 export const DEFAULT_SETTINGS: Settings = {
-  widget: {
-    enable: false,
-  },
   vim: {
     visualMode: true,
   },
+
   frame: {
     enable: true,
     minWidth: 20,

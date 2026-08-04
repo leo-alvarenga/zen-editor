@@ -43,22 +43,22 @@ export interface VimEditorOptions {
 /** Structural view of the base editor's private state (runtime-accessible). */
 interface EditorStateLike {
   lines: string[];
-  cursorLine: number;
   cursorCol: number;
+  cursorLine: number;
 }
 
 export class VimEditor extends CustomEditor {
   private pi: ExtensionAPI;
-  private provider: () => ExternalData;
   private opts: VimEditorOptions;
+  private provider: () => ExternalData;
 
-  private mode: Mode = "insert";
   private countBuffer = "";
   private gPending = false;
+  private mode: Mode = "insert";
   private visualAnchor: Pos | null = null;
 
-  private spinnerPhase: SpinnerPhase | null = null;
   private spinnerIdx = 0;
+  private spinnerPhase: SpinnerPhase | null = null;
   private spinnerTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
@@ -68,23 +68,28 @@ export class VimEditor extends CustomEditor {
     ...args: ConstructorParameters<typeof CustomEditor>
   ) {
     super(...args);
+
     this.pi = pi;
-    this.provider = provider;
     this.opts = opts;
+    this.provider = provider;
   }
 
   setSpinner(phase: SpinnerPhase | null): void {
     if (this.spinnerPhase === phase) return;
-    this.spinnerPhase = phase;
+
     this.spinnerIdx = 0;
+    this.spinnerPhase = phase;
     this.clearSpinnerTimer();
-    if (phase) {
-      const frames = SPINNER_FRAMES[phase]!;
+
+    if (phase && SPINNER_FRAMES[phase]) {
+      const frames = SPINNER_FRAMES[phase];
+
       this.spinnerTimer = setInterval(() => {
         this.spinnerIdx = (this.spinnerIdx + 1) % frames.length;
         this.tui.requestRender();
       }, 80);
     }
+
     this.tui.requestRender();
   }
 
@@ -103,6 +108,7 @@ export class VimEditor extends CustomEditor {
     // `g` prefix (gg / G) works in normal and visual mode.
     if (this.gPending) {
       this.gPending = false;
+
       if (matchesKey(data, "g")) {
         this.applyPos({ line: 0, col: this.getCursor().col });
       } else if (matchesKey(data, "shift+g")) {
@@ -111,15 +117,18 @@ export class VimEditor extends CustomEditor {
           col: this.getCursor().col,
         });
       }
+
       return;
     }
 
     if (this.mode === "insert") {
       if (matchesKey(data, "escape")) {
         if (this.isShowingAutocomplete()) super.handleInput(data); // cancel popup
+
         this.setMode("normal");
         return;
       }
+
       super.handleInput(data);
       return;
     }
@@ -131,6 +140,7 @@ export class VimEditor extends CustomEditor {
         super.handleInput(data);
         return;
       }
+
       if (this.mode === "visual") this.setMode("normal");
       return; // in normal mode escape is a no-op (never reaches app.interrupt)
     }
@@ -143,6 +153,7 @@ export class VimEditor extends CustomEditor {
           this.applyPos({ line: this.getCursor().line, col: 0 });
           return;
         }
+
         this.countBuffer += data;
         return;
       }
@@ -155,9 +166,11 @@ export class VimEditor extends CustomEditor {
         case "i":
           this.enterInsert(false);
           return;
+
         case "a":
           this.enterInsert(true);
           return;
+
         case "I":
           this.applyPos({
             line: this.getCursor().line,
@@ -165,30 +178,39 @@ export class VimEditor extends CustomEditor {
               this.getLines()[this.getCursor().line] ?? "",
             ),
           });
+
           this.enterInsert(false);
           return;
+
         case "A":
           this.applyPos({
             line: this.getCursor().line,
             col: (this.getLines()[this.getCursor().line] ?? "").length,
           });
+
           this.enterInsert(false);
           return;
+
         case "o":
           this.openLine(false);
           return;
+
         case "O":
           this.openLine(true);
           return;
+
         case "x":
           super.handleInput(DELETE_FORWARD_KEY);
           return;
+
         case "u":
           this.undoEdit();
           return;
+
         case "v":
           if (this.opts.visualMode) this.enterVisual();
           return;
+
         default:
           break;
       }
@@ -197,9 +219,11 @@ export class VimEditor extends CustomEditor {
         case "v":
           this.setMode("normal");
           return;
+
         case "d":
           this.deleteSelection();
           return;
+
         default:
           break;
       }
@@ -208,6 +232,7 @@ export class VimEditor extends CustomEditor {
     // Swallow other printable keys in normal/visual; pass everything else
     // (arrows, tab, ctrl-*, ...) up to the base editor.
     if (data.length === 1 && data.charCodeAt(0) >= 32) return;
+
     super.handleInput(data);
   }
 
@@ -219,39 +244,54 @@ export class VimEditor extends CustomEditor {
 
     if (data in NAVIGATION_ARROWS) {
       const key = NAVIGATION_ARROWS[data]!;
+
       for (let i = 0; i < count; i++) super.handleInput(key);
+
       this.countBuffer = "";
       return true;
     }
+
     if (data === "w" || data === "b" || data === "e") {
       const dir = data === "w" ? "next" : data === "b" ? "prev" : "end";
+
       this.applyPos(repeatWord(lines, cur, dir, count));
       this.countBuffer = "";
+
       return true;
     }
+
     if (data === "^") {
       this.applyPos({
         line: cur.line,
         col: firstNonWhitespace(lines[cur.line] ?? ""),
       });
+
       this.countBuffer = "";
+
       return true;
     }
+
     if (data === "$") {
       this.applyPos({ line: cur.line, col: (lines[cur.line] ?? "").length });
       this.countBuffer = "";
+
       return true;
     }
+
     if (data === "g") {
       this.gPending = true;
       this.countBuffer = "";
+
       return true;
     }
+
     if (data === "G") {
       this.applyPos({ line: lines.length - 1, col: cur.col });
       this.countBuffer = "";
+
       return true;
     }
+
     return false;
   }
 
@@ -260,11 +300,13 @@ export class VimEditor extends CustomEditor {
   private enterInsert(after: boolean): void {
     if (after) {
       const cur = this.getCursor();
+
       this.applyPos({
         line: cur.line,
         col: (this.getLines()[cur.line] ?? "").length,
       });
     }
+
     this.setMode("insert");
   }
 
@@ -275,9 +317,12 @@ export class VimEditor extends CustomEditor {
 
   private setMode(mode: Mode): void {
     if (this.mode === mode) return;
+
     this.mode = mode;
     this.countBuffer = "";
+
     if (mode !== "visual") this.visualAnchor = null;
+
     this.pi.events.emit(MODE_CHANGE_EVENT_KEY, { mode });
   }
 
@@ -287,25 +332,30 @@ export class VimEditor extends CustomEditor {
     const i = this.getCursor().line;
     const lines = this.getLines();
     const indent = lines[i]?.match(/^\s*/)?.[0] ?? "";
+
     this.pushSnapshot();
     this.stateRef.lines.splice(above ? i : i + 1, 0, indent);
     this.applyPos({ line: above ? i : i + 1, col: indent.length });
+
     this.onChange?.(this.getText());
     this.setMode("insert");
   }
 
   private deleteSelection(): void {
     const a = this.visualAnchor;
+
     if (!a) {
       this.setMode("normal");
       return;
     }
+
     const b = this.getCursor();
     const s = a.line < b.line || (a.line === b.line && a.col <= b.col) ? a : b;
     const e = s === a ? b : a;
-    const lines = this.getLines();
 
+    const lines = this.getLines();
     this.pushSnapshot();
+
     if (s.line === e.line) {
       const line = lines[s.line]!;
       this.stateRef.lines[s.line] = line.slice(0, s.col) + line.slice(e.col);
@@ -313,12 +363,14 @@ export class VimEditor extends CustomEditor {
       const first = lines[s.line]!.slice(0, s.col);
       const last = lines[e.line]!.slice(e.col);
       const middle = lines.slice(s.line + 1, e.line).join("");
+
       this.stateRef.lines.splice(
         s.line,
         e.line - s.line + 1,
         first + middle + last,
       );
     }
+
     this.visualAnchor = null;
     this.applyPos({ line: s.line, col: s.col });
     this.onChange?.(this.getText());
@@ -326,11 +378,11 @@ export class VimEditor extends CustomEditor {
   }
 
   private undoEdit(): void {
-    (this as unknown as { undo(): void }).undo();
+    (this as unknown as { undo(): void })?.undo();
   }
 
   private pushSnapshot(): void {
-    (this as unknown as { pushUndoSnapshot(): void }).pushUndoSnapshot();
+    (this as unknown as { pushUndoSnapshot(): void })?.pushUndoSnapshot();
   }
 
   // ── rendering ──────────────────────────────────────────────────────────
@@ -338,18 +390,19 @@ export class VimEditor extends CustomEditor {
   render(width: number): string[] {
     const frame = this.opts.frame;
     const ext = this.provider();
+
     const d: FrameData = {
-      mode: this.mode,
-      count: this.countBuffer,
-      modelName: ext.modelName,
-      thinkingLevel: ext.thinkingLevel,
-      spinnerPhase: ext.spinnerPhase,
-      spinnerFrame: this.spinnerFrame(),
-      context: ext.context,
       cwd: ext.cwd,
-      gitBranch: ext.gitBranch,
+      mode: this.mode,
+      context: ext.context,
       gitDirty: ext.gitDirty,
+      count: this.countBuffer,
       agentMode: ext.agentMode,
+      gitBranch: ext.gitBranch,
+      modelName: ext.modelName,
+      spinnerPhase: ext.spinnerPhase,
+      thinkingLevel: ext.thinkingLevel,
+      spinnerFrame: this.spinnerFrame(),
     };
 
     // No theme (non-TUI) or frame disabled or too narrow → plain editor.
@@ -366,10 +419,13 @@ export class VimEditor extends CustomEditor {
 
     const inner = super.render(innerWidth);
     const ctx: SegmentContext = {
+      cfg: frame,
       theme: ext.theme,
       border: this.borderColor,
-      icons: { ...DEFAULT_ICONS, ...frame.icons },
-      cfg: frame,
+      icons: {
+        ...DEFAULT_ICONS,
+        ...frame.icons,
+      },
     };
 
     const box = renderFrame(
@@ -400,7 +456,9 @@ export class VimEditor extends CustomEditor {
 
   private spinnerFrame(): string {
     if (!this.spinnerPhase) return "";
+
     const frames = SPINNER_FRAMES[this.spinnerPhase]!;
+
     return frames[this.spinnerIdx % frames.length]!;
   }
 
