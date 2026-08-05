@@ -21,14 +21,13 @@ export const DELETE_FORWARD_KEY = "\x1b[3~";
 /** Spinner animation frames per phase (pi-editor-shell style). */
 export const SPINNER_FRAMES: Record<SpinnerPhase, string[]> = {
   idle: ["⠃", "⠞", "⡵", "⠿", "⢹", "⠄"],
-  outputting: ["⡀", "⣀", "⣄", "⣤", "⣦", "⣶", "⣷", "⣿"],
+  outputting: ["⠋", "⠙", "⠸", "⠴", "⠦", "⠇", "⠏"],
   thinking: ["󰌶", "󰌶", "󰌶", "󰌶", "󰌵", "󰌵", "󰌵", "󰌵"],
   toolcall: ["●", "●", "●", "●", "○", "○", "○", "○"],
-  exec: ["◜", "◝", "◞", "◟"],
+  exec: ["⠂", "⠅", "⠍", "⠟", "⠿", "⠽", "⠿", "⠟", "⠍", "⠅", "⠂"],
 
   // Sample ["░", "▒", "▓", "█", "▓", "▒"],
 };
-
 /** Nerd Font defaults (override any subset via `frame.icons`). */
 export const DEFAULT_ICONS: FrameIcons = {
   model: "\uee9c", // fa-brain
@@ -62,7 +61,7 @@ export const DEFAULT_SETTINGS: Settings = {
     paddingBottom: 1,
     paddingX: 1,
     marginTop: 0,
-    marginBottom: 1,
+    marginBottom: 0,
     showModel: true,
     showThinking: true,
     showContext: true,

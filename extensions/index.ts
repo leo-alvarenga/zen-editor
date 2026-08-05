@@ -13,13 +13,16 @@ import { execFileSync } from "node:child_process";
 import type {
   ExtensionAPI,
   ExtensionContext,
+  ReadonlyFooterDataProvider,
   ThemeColor,
 } from "@earendil-works/pi-coding-agent";
+import type { Component } from "@earendil-works/pi-tui";
 
 import {
   DEFAULT_SETTINGS,
   PI_MODE_MANAGER_MODE_DATA_KEY,
   PI_MODE_MANAGER_MODE_EVENT,
+  SPINNER_FRAMES,
 } from "./config/constants";
 import { loadSettings } from "./config/settings";
 import type { Settings, SpinnerPhase } from "./config/types";
@@ -140,6 +143,7 @@ export default async function (pi: ExtensionAPI) {
           };
         }
       | undefined;
+
     if (state?.currentModeConfig?.name) {
       agentMode = {
         name: state.currentModeConfig.name,
@@ -149,18 +153,32 @@ export default async function (pi: ExtensionAPI) {
     } else if (state?.currentMode) {
       agentMode = { name: state.currentMode };
     }
+
     editor?.refresh();
   });
 
   pi.on("session_start", async (_event, ctx) => {
     currentCtx = ctx;
     readAgentModeFromSession(ctx);
+
     git = readGit(ctx.cwd);
 
-    setTimeout(() => setSpinner("idle"), 1000);
+    ctx.ui.setWorkingIndicator({
+      intervalMs: 80,
+      frames: SPINNER_FRAMES.outputting,
+    });
+
+    ctx.ui.setFooter(() => ({
+      render() {
+        return [];
+      },
+
+      invalidate() {},
+    }));
 
     ctx.ui.setEditorComponent((...args) => {
       editor?.stopSpinner();
+
       editor = new VimEditor(
         pi,
         provideExternal,
@@ -170,6 +188,7 @@ export default async function (pi: ExtensionAPI) {
         },
         ...args,
       );
+
       return editor;
     });
   });
@@ -181,8 +200,10 @@ export default async function (pi: ExtensionAPI) {
     spinnerPhase = null;
   });
 
-  // Spinner phase mapping.
+  // Spinner phases
+  pi.on("agent_end", () => setSpinner(null));
   pi.on("turn_start", () => setSpinner("thinking"));
+  pi.on("tool_execution_start", () => setSpinner("exec"));
 
   pi.on("message_update", (event) => {
     const type = event?.assistantMessageEvent?.type;
@@ -194,8 +215,4 @@ export default async function (pi: ExtensionAPI) {
     else if (type.startsWith("toolcall_")) setSpinner("toolcall");
     else setSpinner("idle");
   });
-
-  pi.on("tool_execution_start", () => setSpinner("exec"));
-
-  pi.on("agent_end", () => setSpinner(null));
 }
