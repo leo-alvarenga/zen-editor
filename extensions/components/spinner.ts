@@ -5,8 +5,8 @@ import type { SegmentDef } from "./types";
 export const spinnerSegment: SegmentDef = {
   id: "spinner",
   slot: "topLeft",
+  replaces: (d) => d.spinnerPhase !== null,
   enabled: (d) => d.spinnerPhase !== null && d.spinnerPhase !== "idle",
-  replaces: (d) => d.spinnerPhase !== null && d.spinnerPhase !== "idle",
   render: (d, { theme }) => {
     let phase = d.spinnerPhase ?? "thinking";
 
