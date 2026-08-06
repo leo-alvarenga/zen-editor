@@ -451,6 +451,7 @@ export class VimEditor extends CustomEditor {
     const marginBottom = Array(Math.max(0, frame.marginBottom ?? 0)).fill(
       marginRow,
     );
+
     return [...marginTop, ...box, ...marginBottom];
   }
 

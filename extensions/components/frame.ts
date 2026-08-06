@@ -49,24 +49,28 @@ export function fitFrameRow(
   width: number,
   border: (str: string) => string,
 ): string {
-  const inner = Math.max(0, width - 2); // space between the two caps
   const minGap = 3;
+  const inner = Math.max(0, width - 2); // space between the two caps
   const rightText2 = truncateToWidth(
     rightText,
     Math.max(0, inner - minGap),
     "",
   );
+
   const leftBudget = Math.max(0, inner - minGap - visibleWidth(rightText2));
   const leftText2 = truncateToWidth(leftText, leftBudget, "");
+
   const fill = Math.max(
     0,
     inner - visibleWidth(leftText2) - visibleWidth(rightText2),
   );
+
   return border(leftCap + leftText2 + "─".repeat(fill) + rightText2 + rightCap);
 }
 
 function wrapContent(row: string, paddingX: number): string {
   if (paddingX <= 0) return row;
+
   return " ".repeat(paddingX) + row + " ".repeat(paddingX);
 }
 
@@ -81,12 +85,14 @@ export function renderFrame(
   // The real bottom border is the last border-like row (autocomplete rows
   // are appended *after* it, so the last row is NOT necessarily the bottom).
   let bottomIdx = inner.length - 1;
+
   for (let i = inner.length - 1; i >= 0; i--) {
     if (isBorderRow(inner[i]!)) {
       bottomIdx = i;
       break;
     }
   }
+
   const hasPopup = bottomIdx < inner.length - 1;
 
   const result: string[] = [];
