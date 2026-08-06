@@ -54,9 +54,9 @@ export const DEFAULT_SETTINGS: Settings = {
   accentColor: "accent",
 
   header: {
-    enable: true,
+    enable: false,
     logoColor: "text",
-    accentColor: "customMessageLabel",
+    accentColor: "accent",
 
     heading: "Zen Pi",
     subheading: "A pi-coding-agent powered terminal editor",
@@ -91,6 +91,7 @@ export const DEFAULT_SETTINGS: Settings = {
     showAgentMode: true,
     showVimMode: true,
     icons: {},
+    borderColor: "text",
   },
 };
 

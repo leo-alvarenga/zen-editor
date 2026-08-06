@@ -63,6 +63,9 @@ export interface FrameSettings {
 
   icons?: Partial<FrameIcons>;
   colors?: Partial<FrameColors>;
+
+  /** ThemeColor used as the fg for all editor border characters. Default "border". */
+  borderColor?: ThemeColor;
 }
 
 /** `header` — the top-line header, which can show a logo or other text */

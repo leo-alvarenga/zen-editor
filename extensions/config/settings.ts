@@ -71,6 +71,10 @@ function normalize(raw: unknown): Settings {
         typeof f.icons === "object" && f.icons
           ? { ...d.frame?.icons, ...(f.icons as Record<string, unknown>) }
           : d.frame?.icons,
+      borderColor:
+        typeof f.borderColor === "string" && isThemeColor(f.borderColor)
+          ? f.borderColor
+          : (d.frame?.borderColor ?? "border"),
     };
   }
 

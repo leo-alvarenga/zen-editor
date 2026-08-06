@@ -24,7 +24,7 @@ export const tokenCountSegment: SegmentDef = {
   id: "token-count",
   slot: "bottomLeft",
   enabled: (_d, cfg) => cfg.showContext !== false,
-  render: (d, { theme, icons }) => {
+  render: (d, { border, theme, icons }) => {
     const c = d.context;
     if (!c) return "";
 
@@ -45,7 +45,7 @@ export const tokenCountSegment: SegmentDef = {
 
     return (
       theme.fg(color, ` ${icons.context} ctx ${pct}`) +
-      theme.fg("muted", ` · ${used}/${formatWindow(c.window)} `)
+      theme.fg("muted", ` ${border("·")} ${used}/${formatWindow(c.window)} `)
     );
   },
 };

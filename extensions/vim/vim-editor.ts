@@ -408,6 +408,13 @@ export class VimEditor extends CustomEditor {
       accentColor: this.opts.accentColor,
     };
 
+    if (ext.theme?.fg) {
+      const borderColor =
+        frame.borderColor ?? this.opts.accentColor ?? "border";
+
+      this.borderColor = (s: string) => ext.theme!.fg(borderColor, s);
+    }
+
     // No theme (non-TUI) or frame disabled or too narrow → plain editor.
     if (!ext.theme || !frame.enable || width < (frame.minWidth ?? 20)) {
       return super.render(width);

@@ -34,8 +34,10 @@ function plain(row: string): string {
 /** A border row is all `─`, or a `─── ↑/↓ N more ───` scroll indicator. */
 function isBorderRow(row: string): boolean {
   const t = plain(row).trim();
+
   if (t === "") return true;
   if (/^─+$/.test(t)) return true;
+
   return /^─── [↑↓] \d+ more ─*$/.test(t);
 }
 
@@ -65,7 +67,13 @@ export function fitFrameRow(
     inner - visibleWidth(leftText2) - visibleWidth(rightText2),
   );
 
-  return border(leftCap + leftText2 + "─".repeat(fill) + rightText2 + rightCap);
+  return (
+    border(leftCap) +
+    leftText2 +
+    border("─".repeat(fill)) +
+    rightText2 +
+    border(rightCap)
+  );
 }
 
 function wrapContent(row: string, paddingX: number): string {
