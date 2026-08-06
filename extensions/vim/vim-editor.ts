@@ -8,6 +8,7 @@
  */
 import {
   CustomEditor,
+  ThemeColor,
   type ExtensionAPI,
 } from "@earendil-works/pi-coding-agent";
 import { matchesKey } from "@earendil-works/pi-tui";
@@ -36,8 +37,9 @@ import {
 } from "./motions";
 
 export interface VimEditorOptions {
-  frame: FrameSettings;
   visualMode: boolean;
+  frame: FrameSettings;
+  accentColor: ThemeColor;
 }
 
 /** Structural view of the base editor's private state (runtime-accessible). */
@@ -50,7 +52,7 @@ interface EditorStateLike {
 export class VimEditor extends CustomEditor {
   private pi: ExtensionAPI;
   private opts: VimEditorOptions;
-  private provider: () => ExternalData;
+  private provider: (pi: ExtensionAPI) => ExternalData;
 
   private countBuffer = "";
   private gPending = false;
@@ -63,7 +65,7 @@ export class VimEditor extends CustomEditor {
 
   constructor(
     pi: ExtensionAPI,
-    provider: () => ExternalData,
+    provider: (pi: ExtensionAPI) => ExternalData,
     opts: VimEditorOptions,
     ...args: ConstructorParameters<typeof CustomEditor>
   ) {
@@ -389,7 +391,7 @@ export class VimEditor extends CustomEditor {
 
   render(width: number): string[] {
     const frame = this.opts.frame;
-    const ext = this.provider();
+    const ext = this.provider(this.pi);
 
     const d: FrameData = {
       cwd: ext.cwd,
@@ -403,6 +405,7 @@ export class VimEditor extends CustomEditor {
       spinnerPhase: ext.spinnerPhase,
       thinkingLevel: ext.thinkingLevel,
       spinnerFrame: this.spinnerFrame(),
+      accentColor: this.opts.accentColor,
     };
 
     // No theme (non-TUI) or frame disabled or too narrow → plain editor.

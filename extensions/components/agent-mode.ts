@@ -12,13 +12,13 @@ export const agentModeSegment: SegmentDef = {
     const m = d.agentMode;
     if (!m) return "";
 
-    const color = m.color ?? "accent";
+    const color = m.color ?? d.accentColor;
     const label = theme.bold(` ${m.icon ?? "◆"} ${capitalize(m.name)} `);
 
     try {
       return theme.fg(color, label);
     } catch {
-      return theme.fg("accent", label);
+      return theme.fg(d.accentColor, label);
     }
   },
 };

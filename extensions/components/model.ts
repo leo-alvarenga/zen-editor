@@ -8,6 +8,6 @@ export const modelSegment: SegmentDef = {
   render: (d, { theme, icons }) => {
     if (!d.modelName) return "";
 
-    return theme.fg("accent", ` ${icons.model} ${d.modelName} `);
+    return theme.fg(d.accentColor, ` ${icons.model} ${d.modelName} `);
   },
 };

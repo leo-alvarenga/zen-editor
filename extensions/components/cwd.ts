@@ -1,20 +1,5 @@
-import { homedir } from "os";
-import { basename } from "node:path";
-
 import type { SegmentDef } from "./types";
-
-function getShortCwd(cwd: string): string {
-  const home = homedir();
-
-  let path = cwd.replace(home, "~");
-  const subpathCount = path.match(/\//gm)?.length ?? 0;
-
-  if (subpathCount > 3) {
-    path = basename(path);
-  }
-
-  return path;
-}
+import { getShortCwd } from "../utils";
 
 /** Bottom-right: working directory + git branch (with dirty count). */
 export const cwdSegment: SegmentDef = {
@@ -28,7 +13,7 @@ export const cwdSegment: SegmentDef = {
 
     if (d.gitBranch) {
       let git = ` ${icons.gitBranch} ${d.gitBranch}`;
-      text += theme.fg("accent", git);
+      text += theme.fg(d.accentColor, git);
 
       if (d.gitDirty > 0) {
         text += theme.fg("error", ` ${icons.gitDirty} ${d.gitDirty}`);

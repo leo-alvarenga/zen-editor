@@ -5,6 +5,7 @@ import { getAgentDir } from "@earendil-works/pi-coding-agent";
 
 import { CONFIG_FILE_NAME, DEFAULT_SETTINGS } from "./constants";
 import { Settings } from "./types";
+import { isThemeColor } from "../utils";
 
 function getResolvedSettingsFilePath(): string {
   return join(getAgentDir(), CONFIG_FILE_NAME);
@@ -18,8 +19,20 @@ function loadSettingsFile(): Promise<string> {
 function normalize(raw: unknown): Settings {
   if (!raw || typeof raw !== "object") return DEFAULT_SETTINGS;
 
+  const num = (v: unknown, fallback: number): number =>
+    typeof v === "number" && Number.isFinite(v) && v >= 0
+      ? Math.floor(v)
+      : fallback;
+
+  const bool = (v: unknown, fallback: boolean | undefined): boolean =>
+    typeof v === "boolean" ? v : (fallback ?? true);
+
+  const str = (v: unknown, fallback: string): string =>
+    typeof v === "string" ? v : fallback;
+
   const d = DEFAULT_SETTINGS;
   const r = raw as Record<string, unknown>;
+
   const out: Settings = {
     ...DEFAULT_SETTINGS,
     frame: { ...DEFAULT_SETTINGS.frame },
@@ -40,14 +53,6 @@ function normalize(raw: unknown): Settings {
   if (typeof r.frame === "object" && r.frame) {
     const f = r.frame as Record<string, unknown>;
 
-    const num = (v: unknown, fallback: number): number =>
-      typeof v === "number" && Number.isFinite(v) && v >= 0
-        ? Math.floor(v)
-        : fallback;
-
-    const bool = (v: unknown, fallback: boolean | undefined): boolean =>
-      typeof v === "boolean" ? v : (fallback ?? true);
-
     out.frame = {
       enable: bool(f.enable, d.frame?.enable),
       minWidth: num(f.minWidth, d.frame?.minWidth ?? 20),
@@ -67,6 +72,32 @@ function normalize(raw: unknown): Settings {
           ? { ...d.frame?.icons, ...(f.icons as Record<string, unknown>) }
           : d.frame?.icons,
     };
+  }
+
+  if (typeof r.header === "object" && r.header) {
+    const h = r.header as Record<string, unknown>;
+
+    out.header = {
+      enable: bool(h.enable, d.header?.enable),
+      heading: str(h.heading, d.header?.heading ?? ""),
+      subheading: str(h.subheading, d.header?.subheading ?? ""),
+      logoColor:
+        typeof h.logoColor === "string" && isThemeColor(h.logoColor)
+          ? h.logoColor
+          : (d.header?.logoColor ?? "accent"),
+      accentColor:
+        typeof h.accentColor === "string" && isThemeColor(h.accentColor)
+          ? h.accentColor
+          : (d.header?.accentColor ?? "accent"),
+      logo:
+        Array.isArray(h.logo) && h.logo.every((x) => typeof x === "string")
+          ? (h.logo as string[])
+          : (d.header?.logo ?? []),
+    };
+  }
+
+  if (typeof r.accentColor === "string" && isThemeColor(r.accentColor)) {
+    out.accentColor = r.accentColor || d.accentColor;
   }
 
   return out;

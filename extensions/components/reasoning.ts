@@ -9,7 +9,6 @@ export const reasoningSegment: SegmentDef = {
   enabled: (_d, cfg) => cfg.showThinking !== false,
   render: (d, { theme, icons }) => {
     if (!d.thinkingLevel) return "";
-
     const token = THINKING_TOKEN[d.thinkingLevel] ?? "thinkingText";
 
     return theme.fg(token as never, ` ${icons.thinking} ${d.thinkingLevel} `);

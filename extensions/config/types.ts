@@ -65,6 +65,16 @@ export interface FrameSettings {
   colors?: Partial<FrameColors>;
 }
 
+/** `header` — the top-line header, which can show a logo or other text */
+export interface HeaderSettings {
+  logo: string[];
+  enable: boolean;
+  heading: string;
+  subheading: string;
+  logoColor: ThemeColor;
+  accentColor: ThemeColor;
+}
+
 export interface VimSettings {
   /** Enable minimal visual mode (`v` to select, `d` to delete). Default true. */
   visualMode?: boolean;
@@ -73,4 +83,8 @@ export interface VimSettings {
 export interface Settings {
   vim?: VimSettings;
   frame?: FrameSettings;
+  header?: HeaderSettings;
+
+  /** Accent color for the frame border and other highlights; Defaults to 'accent' */
+  accentColor?: ThemeColor;
 }

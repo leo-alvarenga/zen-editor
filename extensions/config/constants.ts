@@ -1,3 +1,4 @@
+import { ThemeColor } from "@earendil-works/pi-coding-agent";
 import type { FrameIcons, Settings, SpinnerPhase } from "./types";
 
 export const CONFIG_FILE_NAME = "zen-editor.json";
@@ -50,6 +51,27 @@ export const THINKING_TOKEN: Record<string, string> = {
 };
 
 export const DEFAULT_SETTINGS: Settings = {
+  accentColor: "accent",
+
+  header: {
+    enable: true,
+    logoColor: "text",
+    accentColor: "customMessageLabel",
+
+    heading: "Zen Pi",
+    subheading: "A pi-coding-agent powered terminal editor",
+
+    logo: [
+      "",
+      "█████████  ",
+      "███   ███  ",
+      "██████     ",
+      "███     ███",
+      "███     ███",
+      "",
+    ],
+  },
+
   vim: {
     visualMode: true,
   },
@@ -70,4 +92,53 @@ export const DEFAULT_SETTINGS: Settings = {
     showVimMode: true,
     icons: {},
   },
+};
+
+export const THEME_COLORS: Record<ThemeColor, true> = {
+  accent: true,
+  border: true,
+  borderAccent: true,
+  borderMuted: true,
+  success: true,
+  error: true,
+  warning: true,
+  muted: true,
+  dim: true,
+  text: true,
+  thinkingText: true,
+  userMessageText: true,
+  customMessageText: true,
+  customMessageLabel: true,
+  toolTitle: true,
+  toolOutput: true,
+  mdHeading: true,
+  mdLink: true,
+  mdLinkUrl: true,
+  mdCode: true,
+  mdCodeBlock: true,
+  mdCodeBlockBorder: true,
+  mdQuote: true,
+  mdQuoteBorder: true,
+  mdHr: true,
+  mdListBullet: true,
+  toolDiffAdded: true,
+  toolDiffRemoved: true,
+  toolDiffContext: true,
+  syntaxComment: true,
+  syntaxKeyword: true,
+  syntaxFunction: true,
+  syntaxVariable: true,
+  syntaxString: true,
+  syntaxNumber: true,
+  syntaxType: true,
+  syntaxOperator: true,
+  syntaxPunctuation: true,
+  thinkingOff: true,
+  thinkingMinimal: true,
+  thinkingLow: true,
+  thinkingMedium: true,
+  thinkingHigh: true,
+  thinkingXhigh: true,
+  thinkingMax: true,
+  bashMode: true,
 };

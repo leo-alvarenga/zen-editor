@@ -8,19 +8,14 @@
  * All appearance logic lives in components/ (segments + frame); all editor
  * behavior lives in vim/. Nothing here renders anything.
  */
-import { execFileSync } from "node:child_process";
-
 import type {
   ExtensionAPI,
   ExtensionContext,
-  ReadonlyFooterDataProvider,
   ThemeColor,
 } from "@earendil-works/pi-coding-agent";
-import type { Component } from "@earendil-works/pi-tui";
 
 import {
   DEFAULT_SETTINGS,
-  PI_MODE_MANAGER_MODE_DATA_KEY,
   PI_MODE_MANAGER_MODE_EVENT,
   SPINNER_FRAMES,
 } from "./config/constants";
@@ -28,7 +23,13 @@ import { loadSettings } from "./config/settings";
 import type { Settings, SpinnerPhase } from "./config/types";
 import type { ExternalData } from "./components/types";
 import { VimEditor } from "./vim/vim-editor";
-import { capitalize } from "./utils";
+import {
+  capitalize,
+  readAgentModeFromSession,
+  readGit,
+  type GitInfo,
+} from "./utils";
+import { createHeader, type HeaderEnv } from "./components/header";
 
 type AgentModeState = ExternalData["agentMode"];
 
@@ -37,72 +38,34 @@ let currentCtx: ExtensionContext | null = null;
 let settings: Settings = DEFAULT_SETTINGS;
 let spinnerPhase: SpinnerPhase | null = null;
 let agentMode: AgentModeState = null;
-let git: { branch: string | undefined; dirty: number } = {
+let git: GitInfo = {
   branch: undefined,
   dirty: 0,
 };
 
 // ── data sources ─────────────────────────────────────────────────────────
+//
 
-function readAgentModeFromSession(ctx: ExtensionContext): void {
-  try {
-    const entries = [...ctx.sessionManager.getBranch()].reverse();
-    for (const entry of entries) {
-      const e = entry as { type?: string; customType?: string; data?: unknown };
-      if (e.type !== "custom" || e.customType !== PI_MODE_MANAGER_MODE_DATA_KEY)
-        continue;
-      const state = e.data as
-        | {
-            currentModeConfig?: {
-              name?: string;
-              icon?: string;
-              color?: ThemeColor;
-            };
-          }
-        | undefined;
-      if (state?.currentModeConfig?.name) {
-        agentMode = {
-          name: state.currentModeConfig.name,
-          icon: state.currentModeConfig.icon,
-          color: state.currentModeConfig.color,
-        };
-        return;
-      }
-    }
-  } catch {
-    // pi-mode-manager absent or session unreadable — silently stay unknown.
-  }
+/** Live env snapshot for the header's muted line. Reads current git/ctx so
+ *  model switches are reflected on the next render. */
+function getHeaderEnv(pi: ExtensionAPI): HeaderEnv {
+  return {
+    gitDirty: git.dirty,
+    gitBranch: git.branch,
+    cwd: currentCtx?.cwd ?? "",
+    modelName: provideExternal(pi).modelName,
+    thinkingLevel: currentCtx?.thinkingLevel as string | undefined,
+  };
 }
 
-function readGit(cwd: string): { branch: string | undefined; dirty: number } {
-  try {
-    const branch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
-      cwd,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-      timeout: 2000,
-    }).trim();
-    const status = execFileSync("git", ["status", "--porcelain"], {
-      cwd,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-      timeout: 2000,
-    });
-    const dirty = status.split("\n").filter((l) => l.trim() !== "").length;
-    return { branch: branch || undefined, dirty };
-  } catch {
-    return { branch: undefined, dirty: 0 };
-  }
-}
-
-function provideExternal(): ExternalData {
+function provideExternal(pi: ExtensionAPI): ExternalData {
   const ctx = currentCtx;
   const usage = ctx?.getContextUsage?.();
   const model = ctx?.model;
 
   return {
     modelName: `${model?.name ?? model?.id ?? "Unknown"} (${capitalize(model?.provider ?? "unknown")})`,
-    thinkingLevel: ctx?.thinkingLevel as string | undefined,
+    thinkingLevel: pi.getThinkingLevel(),
     spinnerPhase,
     context: usage
       ? {
@@ -159,7 +122,7 @@ export default async function (pi: ExtensionAPI) {
 
   pi.on("session_start", async (_event, ctx) => {
     currentCtx = ctx;
-    readAgentModeFromSession(ctx);
+    agentMode = readAgentModeFromSession(ctx);
 
     git = readGit(ctx.cwd);
 
@@ -167,6 +130,12 @@ export default async function (pi: ExtensionAPI) {
       intervalMs: 80,
       frames: SPINNER_FRAMES.outputting,
     });
+
+    if (settings.header?.enable) {
+      ctx.ui.setHeader((_tui, theme) =>
+        createHeader(_tui, theme, pi, settings, getHeaderEnv),
+      );
+    }
 
     ctx.ui.setFooter(() => ({
       render() {
@@ -183,8 +152,10 @@ export default async function (pi: ExtensionAPI) {
         pi,
         provideExternal,
         {
-          frame: settings.frame ?? DEFAULT_SETTINGS.frame!,
           visualMode: settings.vim?.visualMode ?? true,
+          frame: settings.frame ?? DEFAULT_SETTINGS.frame!,
+          accentColor:
+            settings.accentColor ?? DEFAULT_SETTINGS.accentColor ?? "accent",
         },
         ...args,
       );

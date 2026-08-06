@@ -27,6 +27,7 @@ export interface FrameData {
   count: string;
   gitDirty: number;
   spinnerFrame: string;
+  accentColor: ThemeColor;
   gitBranch: string | undefined;
   modelName: string | undefined;
   spinnerPhase: SpinnerPhase | null;

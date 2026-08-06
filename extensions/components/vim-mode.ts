@@ -13,7 +13,7 @@ export const vimModeSegment: SegmentDef = {
   enabled: (_d, cfg) => cfg.showVimMode !== false,
 
   render: (d, { theme }) => {
-    const color = MODE_COLOR[d.mode] ?? "accent";
+    const color = MODE_COLOR[d.mode] ?? d.accentColor;
     const label = ` ${d.mode.toUpperCase()}${d.count ? ` ${d.count}` : ""} `;
 
     return theme.fg(color as never, label);
